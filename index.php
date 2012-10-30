@@ -15,6 +15,8 @@ Cedits/reference:
 /*
 
 Todo:
+	include option to set default time-zone
+	create option for query from pre-saved array or returning array
 	create code for not displaying outdated events
 	create option for open registration events
 	Add available spots and registration option
@@ -27,22 +29,6 @@ Todo:
 
 
 global $post;
-
-/********************************************************************************
-
-		Register post status
-
-********************************************************************************/
-
-// function custom_status()
-// {
-// 	register_post_status('expired');
-// }
-
-// add_action('init', 'custom_status');
-
-
-
 
 /********************************************************************************
 
@@ -76,9 +62,6 @@ function dpb_scheduler_create_post_type_schedule()
 		'capability_type' => 'post',
 		'hierarchical' => false,
 		'menu_position' => 5,
-		// Uncomment the following line to change the slug; 
-		// You must also save your permalink structure to prevent 404 errors
-		//'rewrite' => array( 'slug' => 'dpb_scheduler' ), 
 		//'supports' => array('title','editor','thumbnail','custom-fields','page-attributes','excerpt'),
 		'supports' => array('title','editor','thumbnail'),
 		'taxonomies' => array('dpb_scheduler_event_categories','dpb_scheduler_event_tags')
@@ -134,8 +117,6 @@ add_action('init', 'dpb_scheduler_event_tags_init');
 ********************************************************************************/
 
 //add meta boxes
-add_action( 'add_meta_boxes', 'dpb_scheduler_create_meta_box');
-
 function dpb_scheduler_create_meta_box()
 {
 	add_meta_box('dpb_scheduler_meta_box_event_info', 
@@ -146,6 +127,8 @@ function dpb_scheduler_create_meta_box()
 		'high'
 		);
 }
+
+add_action( 'add_meta_boxes', 'dpb_scheduler_create_meta_box');
 
 function dpb_scheduler_meta_box_callback($post)
 {
@@ -189,7 +172,6 @@ function dpb_scheduler_meta_box_callback($post)
   
   echo '<br /><input type="checkbox" name="dpb_scheduler_close_registration" value="true" '.$close_registration.'> Close registration</input>';
   echo '<br /><input type="checkbox" name="dpb_scheduler_close_registration_after_start_date" value="true" '.$close_registration_after_start_date.'> Close registration after start date</input>';
-
 
 }
 
@@ -285,8 +267,6 @@ function dpb_scheduler_custom_columns( $column, $post_id ) {
     case "end_date":
       echo get_post_meta( $post_id, 'dpb_scheduler_end_date', true);
       break;
-     // case "post_status":
-     //  echo get_post_status($post_id);
   }
 }
 
@@ -416,8 +396,6 @@ function dpb_scheduler_event_list($attributes)
 		}
 	}
 
-	//return $tags;
-
 	$valid_categories = array();
 	if($categories!='')
 	{
@@ -435,21 +413,9 @@ function dpb_scheduler_event_list($attributes)
 			$categories = '';
 		}
 	}
-/*
-	$arguments = array(
-		'dpb_scheduler_event_tags' => $tags,
-		'dpb_scheduler_event_categories' => $categories,
-		//'operator' => 'AND',
-		'orderby' => 'meta_value',
-		'meta_key' => 'dpb_scheduler_start_date',
-		'order' => 'ASC',
-		'posts_per_page' => -1
-		);
-*/
 
 	$arguments['tax_query'] = array(
 		'relation' => $relation);
-	//array_push($arguments['tax_query'], array('relation' => 'OR'));//'relation' => $relation);
 	if(!(empty($valid_categories))){
 		array_push($arguments['tax_query'],
 			array(
@@ -477,34 +443,18 @@ function dpb_scheduler_event_list($attributes)
 			)
 	    );
 	}
-	    // array(
-	    //     'taxonomy' => 'dpb_scheduler_event_categories',
-	    //     'terms' => $valid_categories,
-	    //     'field' => 'slug',
-	    // ),
 
-//array(
-	         //'taxonomy' => 'dpb_scheduler_event_tags',
-	         //'terms' => $valid_tags,
-	         //'field' => 'slug',
-//	     ),
-//	);
-	//query_posts($myquery);
+	//could return query arguments here
+	$query = new WP_Query($arguments);
 
 	date_default_timezone_set('America/New_York');
 	$todays_date = date('Y-m-d');
 
-	$query = new WP_Query($arguments);
+
 	
-	//$todays_date = 
-	//return $query;
 	$return_string .= '<table><tr><th>Event</th><th>Start date</th><th>End date</th><th>Info.</th><th>Open spots</th></tr>';
 	while($query->have_posts()) : $query->the_post();
 		
-		//$start_date = date_format(date_create(get_post_meta(get_the_ID(), "dpb_scheduler_start_date", true)), 'm/d/Y');
-  		//$end_date = date_format(date_create(get_post_meta(get_the_ID(), "dpb_scheduler_end_date", true)), 'm/d/Y');
-
-
   		$start_date = get_post_meta(get_the_ID(), "dpb_scheduler_start_date", true);
   		$end_date = get_post_meta(get_the_ID(), "dpb_scheduler_end_date", true);
   		$registration_closed = (
@@ -518,9 +468,6 @@ function dpb_scheduler_event_list($attributes)
   		if ($end_date<$todays_date){
   			$start_date = "past";
   			$end_date = "past";
-  			//$terms = wp_get_object_terms(get_the_ID(), 'dpb_scheduler_event_categories');
-  			//$print_r($terms);
-  			//array_push($terms, 'expired');
   			wp_set_object_terms( get_the_ID(), 'expired',  'dpb_scheduler_event_categories', true);
 
   		}else{
@@ -543,7 +490,7 @@ function dpb_scheduler_event_list($attributes)
 	endwhile;
 	$return_string .= '</table>';
 	wp_reset_postdata(); //is this necessary?
-	return $return_string;// $return_string;
+	return $return_string;
 }
 
 add_shortcode('dpb_scheduler', 'dpb_scheduler_event_list');
@@ -557,7 +504,6 @@ add_shortcode('dpb_scheduler', 'dpb_scheduler_event_list');
 function dpb_scheduler_registration_form($content){
 	global $post;
 	if($post->post_type == 'dpb_scheduler'){
-		//$content = 'lalala';
 	}
 	return $content;
 }
