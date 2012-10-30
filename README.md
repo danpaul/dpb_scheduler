@@ -6,17 +6,17 @@ When creating classification for your events, it is important to keep in mind a 
 
 For example:
 
-    [dpb_scheduler tags="turtle power, rad"]
+    [dpb_scheduler tags="turtle-power, rad"]
 
-will return events tagged "turtle power" _or_ "rad" (or both). While:
+will return events tagged "turtle-power" _or_ "rad" (or both). While:
 
     [dpb_scheduler categories="tubular, Donatello"]
     
 will only return events _both_ the "tubular" _and_ Donatello categories. The following:
 
-    [dpb_scheduler categoires = "master splinter, Yoshi" tags="radiation effects, rat man"]
+    [dpb_scheduler categoires = "master-splinter, Yoshi" tags="radiation-effects, rat-man"]
     
-will return events that are in _both_ "master splinter" _and_ "Yoshi" categories _and_ have _one or both_ tags "radiation effects" _or_ "rat man".
+will return events that are in _both_ "master-splinter" _and_ "Yoshi" categories _and_ have _one or both_ tags "radiation-effects" _or_ "rat-man".
 
 ###Entering events
 
