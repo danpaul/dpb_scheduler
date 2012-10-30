@@ -25,3 +25,6 @@ To enter new events, simply go to the dpb_scheduler option and select "Create Ne
 ###Admin panel
 
 The admin panel has been customized so you can sort the events by start or end date. You can also filter the results to display only events in a particular category or with a particular tag.
+
+###Notes
+__Currently there is a bug related to category and tag naming. For now, categories or tags with white space, may not appear in short-code queries. Use a dash between categories and tags with more than one word, i.e.: my-awesome-category.__
