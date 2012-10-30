@@ -28,6 +28,21 @@ Todo:
 
 global $post;
 
+/********************************************************************************
+
+		Register post status
+
+********************************************************************************/
+
+// function custom_status()
+// {
+// 	register_post_status('expired');
+// }
+
+// add_action('init', 'custom_status');
+
+
+
 
 /********************************************************************************
 
@@ -35,7 +50,7 @@ global $post;
 
 ********************************************************************************/
 
-function dpb_scheduler_create_post_type_schedule()//dw_create_post_type_portfolio() 
+function dpb_scheduler_create_post_type_schedule()
 {
 	$labels = array(
 		'name' => __( 'dpb_scheduler','your_text_domain'),
@@ -64,7 +79,8 @@ function dpb_scheduler_create_post_type_schedule()//dw_create_post_type_portfoli
 		// Uncomment the following line to change the slug; 
 		// You must also save your permalink structure to prevent 404 errors
 		//'rewrite' => array( 'slug' => 'dpb_scheduler' ), 
-		'supports' => array('title','editor','thumbnail','custom-fields','page-attributes','excerpt'),
+		//'supports' => array('title','editor','thumbnail','custom-fields','page-attributes','excerpt'),
+		'supports' => array('title','editor','thumbnail'),
 		'taxonomies' => array('dpb_scheduler_event_categories','dpb_scheduler_event_tags')
 	  ); 
 	  
@@ -122,8 +138,8 @@ add_action( 'add_meta_boxes', 'dpb_scheduler_create_meta_box');
 
 function dpb_scheduler_create_meta_box()
 {
-	add_meta_box('dpb_scheduler_meta_box_event_dates', 
-		'Event dates', 
+	add_meta_box('dpb_scheduler_meta_box_event_info', 
+		'Event information and options', 
 		'dpb_scheduler_meta_box_callback', 
 		'dpb_scheduler',
 		'normal',
@@ -138,6 +154,24 @@ function dpb_scheduler_meta_box_callback($post)
 
   $start_date = date_format(date_create(get_post_meta($post->ID, "dpb_scheduler_start_date", true)), 'm/d/Y');
   $end_date = date_format(date_create(get_post_meta($post->ID, "dpb_scheduler_end_date", true)), 'm/d/Y');
+  $date_time_info = get_post_meta($post->ID, "dpb_scheduler_date_time_info", true);
+  $cost = get_post_meta($post->ID, "dpb_scheduler_cost", true);
+  $available_spots = get_post_meta($post->ID, "dpb_scheduler_avail", true);
+
+  $close_registration = get_post_meta($post->ID, "dpb_scheduler_close_registration", true);
+  $close_registration_after_start_date = get_post_meta($post->ID, "dpb_scheduler_close_registration_after_start_date", true);
+
+  if($close_registration == 'true'){
+  	$close_registration = 'checked="true"';
+  }else{
+  	$close_registration = '';
+  }
+
+  if($close_registration_after_start_date == 'true'){
+  	$close_registration_after_start_date = 'checked="true"';
+  }else{
+  	$close_registration_after_start_date = '';
+  }
 
   // Include JQueryUI for dates
   echo '<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />';
@@ -147,6 +181,16 @@ function dpb_scheduler_meta_box_callback($post)
   echo '<script> $(function() { $( ".dpb_scheduler_datepicker" ).datepicker(); }); </script>';
   echo '<p>Start date: <input type="text" id="dpb_scheduler_start_date" name="dpb_scheduler_start_date" class="dpb_scheduler_datepicker" value='.$start_date.'></input></p>';
   echo '<p>End date: <input type="text" id="dpb_scheduler_end_date" name="dpb_scheduler_end_date" class="dpb_scheduler_datepicker" value='.$end_date.'></input></p>';
+  //Date and time info.
+  echo '<p>Date/time info.:</p>';
+  echo '<textarea rows="5" cols="60" id="dpb_scheduler_date_time_info" name="dpb_scheduler_date_time_info">'.$date_time_info.'</textarea>';
+  echo '<p>Cost: <input type="text" id="dpb_scheduler_cost" name="dpb_scheduler_cost" value='.$cost.'></input></p>';
+  echo '<p>Available spots: <input type="text" id="dpb_scheduler_avail" name="dpb_scheduler_avail" value='.$available_spots.'></input></p>';
+  
+  echo '<br /><input type="checkbox" name="dpb_scheduler_close_registration" value="true" '.$close_registration.'> Close registration</input>';
+  echo '<br /><input type="checkbox" name="dpb_scheduler_close_registration_after_start_date" value="true" '.$close_registration_after_start_date.'> Close registration after start date</input>';
+
+
 }
 
 // do something with the data entered
@@ -162,7 +206,6 @@ function dpb_scheduler_save_postdata($post_id)
 
 	// verify this came from the our screen and with proper authorization,
 	// because save_post can be triggered at other times
-
 	if ( !wp_verify_nonce( $_POST['dpb_scheduler_nonce'], plugin_basename( __FILE__ ) ) )
 	  return;
 	// Check permissions
@@ -179,9 +222,30 @@ function dpb_scheduler_save_postdata($post_id)
 
 	$start_date = date_create($_POST['dpb_scheduler_start_date']);
 	$end_date = date_create($_POST['dpb_scheduler_end_date']);
-	update_post_meta($post_id, 'dpb_scheduler_start_date', date_format($start_date, 'Y-m-d'));
-	update_post_meta($post_id, 'dpb_scheduler_end_date', date_format($start_date, 'Y-m-d'));
+	$date_time_info = $_POST['dpb_scheduler_date_time_info'];
+	$cost = $_POST['dpb_scheduler_cost'];
+	$available_spots = $_POST['dpb_scheduler_avail'];
+	$date_time_info = $_POST['dpb_scheduler_date_time_info'];
 
+	$close_registration = $_POST['dpb_scheduler_close_registration'];
+	$close_registration_after_start_date = $_POST['dpb_scheduler_close_registration_after_start_date'];
+
+	update_post_meta($post_id, 'dpb_scheduler_start_date', date_format($start_date, 'Y-m-d'));
+	update_post_meta($post_id, 'dpb_scheduler_end_date', date_format($end_date, 'Y-m-d'));
+	update_post_meta($post_id, 'dpb_scheduler_date_time_info', $date_time_info);
+	update_post_meta($post_id, 'dpb_scheduler_cost', $cost);
+	update_post_meta($post_id, 'dpb_scheduler_avail', $available_spots);
+
+	if($close_registration == 'true'){
+		update_post_meta($post_id, 'dpb_scheduler_close_registration', 'true');
+	}else{
+		update_post_meta($post_id, 'dpb_scheduler_close_registration', 'false');
+	}
+	if($close_registration_after_start_date == 'true'){
+		update_post_meta($post_id, 'dpb_scheduler_close_registration_after_start_date', 'true');
+	}else{
+		update_post_meta($post_id, 'dpb_scheduler_close_registration_after_start_date', 'false');
+	}
 }
 
 /********************************************************************************
@@ -189,7 +253,6 @@ function dpb_scheduler_save_postdata($post_id)
 		Cusomize columns in admin interface
 
 ********************************************************************************/
-
 
 //add columns
 
@@ -202,6 +265,7 @@ function dpb_scheduler_add_columns($cols)
 		array
 		(
 			'cb'       => '<input type="checkbox" />',
+			//'post_status' => __( 'Post status',      'trans' ),
 			'start_date'      => __( 'Start date',      'trans' ),
 			'end_date' => __( 'End date', 'trans')
 		)
@@ -221,6 +285,8 @@ function dpb_scheduler_custom_columns( $column, $post_id ) {
     case "end_date":
       echo get_post_meta( $post_id, 'dpb_scheduler_end_date', true);
       break;
+     // case "post_status":
+     //  echo get_post_status($post_id);
   }
 }
 
@@ -231,7 +297,8 @@ add_action( "manage_posts_custom_column", "dpb_scheduler_custom_columns", 10, 2 
 function dpb_scheduler_sortable_columns() {
   return array(
     'start_date' => 'start_date',
-    'end_date' => 'end_date'
+    'end_date' => 'end_date',
+    'post_status' => 'post_status'
   );
 }
 
@@ -388,16 +455,25 @@ function dpb_scheduler_event_list($attributes)
 			array(
 				'taxonomy' => 'dpb_scheduler_event_categories',
 				'terms' => $valid_categories,
-				'field' => 'slug'
+				'field' => 'name'
 			)
 	    );
 	}
+	array_push($arguments['tax_query'],
+		array(
+			'taxonomy' => 'dpb_scheduler_event_categories',
+			'terms' => array('expired'),
+			'field' => 'name',
+			'operator' => 'NOT IN'
+			)
+	    );
+
 	if(!(empty($valid_tags))){
 		array_push($arguments['tax_query'],
 			array(
 				'taxonomy' => 'dpb_scheduler_event_tags',
 				'terms' => $valid_tags,
-				'field' => 'slug'
+				'field' => 'name'
 			)
 	    );
 	}
@@ -415,22 +491,55 @@ function dpb_scheduler_event_list($attributes)
 //	);
 	//query_posts($myquery);
 
+	date_default_timezone_set('America/New_York');
+	$todays_date = date('Y-m-d');
 
 	$query = new WP_Query($arguments);
 	
+	//$todays_date = 
 	//return $query;
-	$return_string .= '<table><tr><th>Event</th><th>Start date</th><th>End date</th><th>Info.</th></tr>';
+	$return_string .= '<table><tr><th>Event</th><th>Start date</th><th>End date</th><th>Info.</th><th>Open spots</th></tr>';
 	while($query->have_posts()) : $query->the_post();
-		$start_date = date_format(date_create(get_post_meta(get_the_ID(), "dpb_scheduler_start_date", true)), 'm/d/Y');	
-  		$end_date = date_format(date_create(get_post_meta(get_the_ID(), "dpb_scheduler_end_date", true)), 'm/d/Y');
+		
+		//$start_date = date_format(date_create(get_post_meta(get_the_ID(), "dpb_scheduler_start_date", true)), 'm/d/Y');
+  		//$end_date = date_format(date_create(get_post_meta(get_the_ID(), "dpb_scheduler_end_date", true)), 'm/d/Y');
 
-		$return_string .= '<tr>';
-	 	$return_string .= '<td><a href ="'.get_permalink().'">'.get_the_title().'</a></td>';
-	 	$return_string .= '<td>'.$start_date.'</td>';
-	 	$return_string .= '<td>'.$end_date.'</td>';//get_post_meta(get_the_ID(), 'dpb_scheduler_end_date', true)
-	 	$return_string .= '<td>'.get_the_excerpt().'</td>';
-	 	$return_string .= '<td><a href="'.get_permalink().'"><button>Register</button></a></td>';
-	 	$return_string .= '</tr>';
+
+  		$start_date = get_post_meta(get_the_ID(), "dpb_scheduler_start_date", true);
+  		$end_date = get_post_meta(get_the_ID(), "dpb_scheduler_end_date", true);
+  		$registration_closed = (
+  								 (get_post_meta(get_the_ID(), "dpb_scheduler_close_registration", true) == 'true') ||
+  								 (
+  								 	($start_date < $todays_date) &&
+  								 	(get_post_meta(get_the_ID(), "dpb_scheduler_close_registration_after_start_date", true) == 'true')
+  								 )
+  								);
+
+  		if ($end_date<$todays_date){
+  			$start_date = "past";
+  			$end_date = "past";
+  			//$terms = wp_get_object_terms(get_the_ID(), 'dpb_scheduler_event_categories');
+  			//$print_r($terms);
+  			//array_push($terms, 'expired');
+  			wp_set_object_terms( get_the_ID(), 'expired',  'dpb_scheduler_event_categories', true);
+
+  		}else{
+  			$start_date = date_format(date_create($start_date), 'm/d/Y');
+  			$end_date = date_format(date_create($end_date), 'm/d/Y');
+
+  			$return_string .= '<tr>';
+  			$return_string .= '<td><a href ="'.get_permalink().'">'.get_the_title().'</a></td>';
+  			$return_string .= '<td>'.$start_date.'</td>';
+  			$return_string .= '<td>'.$end_date.'</td>';
+  			$return_string .= '<td>'.get_post_meta(get_the_ID(), 'dpb_scheduler_date_time_info', true).'</td>';
+  			$return_string .= '<td>'.get_post_meta(get_the_ID(), 'dpb_scheduler_avail', true).'</td>';
+  			if($registration_closed){
+  				$return_string .= '<td><a href="'.get_permalink().'">REGISTRATION CLOSED</a></td>';
+  			}else{
+  				$return_string .= '<td><a href="'.get_permalink().'"><button>Register</button></a></td>';
+  			}
+  			$return_string .= '</tr>';
+  		}
 	endwhile;
 	$return_string .= '</table>';
 	wp_reset_postdata(); //is this necessary?
@@ -438,5 +547,21 @@ function dpb_scheduler_event_list($attributes)
 }
 
 add_shortcode('dpb_scheduler', 'dpb_scheduler_event_list');
+
+/********************************************************************************
+
+		Create template for registration
+
+********************************************************************************/
+
+function dpb_scheduler_registration_form($content){
+	global $post;
+	if($post->post_type == 'dpb_scheduler'){
+		//$content = 'lalala';
+	}
+	return $content;
+}
+
+add_filter('the_content', 'dpb_scheduler_registration_form');
 
 ?>
