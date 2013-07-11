@@ -1,6 +1,6 @@
 ###About
 
-Dpb_scheduler is designed to be a light and flexible scheduling plugin. Events are entered as custom posts of type "dpb_scheduler" and displayed via calls made using shortcodes. There are two custom taxonomies for the dpb_scheduler events. These roughly correspond to the general Wordpress taxonomies "categories" and "tags". Although the regular taxonomies could have been used, the custom taxonomies word chosen to try to keep the plugin more modular and prevent tags and categories from getting mixed together.
+Dpb_scheduler is designed to be a light and flexible scheduling plugin. Events are entered as custom posts of type "dpb_scheduler" and displayed via calls made using shortcodes. There are two custom taxonomies for the dpb_scheduler events. These roughly correspond to the general Wordpress taxonomies "categories" and "tags". Although the regular taxonomies could have been used, custom taxonomies were chosen to try to keep the plugin more modular and prevent tags and categories from getting mixed together.
 
 When creating classification for your events, it is important to keep in mind a differenece in how the "event categories" and "event tags" are handled when called by the shortcodes. Simply, tags use the "or" logical operator while categories use the "and".
 
